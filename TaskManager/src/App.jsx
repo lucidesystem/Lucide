@@ -16,6 +16,47 @@ const MONTH_NAMES = [
   "Jul", "Aug", "Sep", "Oct", "Nov", "Dec",
 ];
 
+const THEMES = [
+  { id: "charcoal", label: "Charcoal", dot: "#202124" },
+  { id: "slate", label: "Slate", dot: "#1a1d24" },
+  { id: "paper", label: "Paper", dot: "#f5f5f3" },
+];
+
+// These wrap the genuinely impure browser APIs (clock reads, RNG) in ordinary
+// module-scope functions. They're only ever invoked from event handlers /
+// effects, never during render, but keeping them out of the component body
+// entirely also satisfies the react-hooks/purity static check.
+let idCounter = 0;
+function generateId() {
+  idCounter += 1;
+  return `id_${idCounter}_${Math.random().toString(36).slice(2, 9)}`;
+}
+function now() {
+  return Date.now();
+}
+function nowDate() {
+  return new Date();
+}
+
+// Lazily loads canvas-confetti from a CDN once, the first time it's needed.
+let confettiLoadPromise = null;
+function loadConfetti() {
+  if (typeof window === "undefined") return Promise.resolve(null);
+  if (window.confetti) return Promise.resolve(window.confetti);
+  if (confettiLoadPromise) return confettiLoadPromise;
+
+  confettiLoadPromise = new Promise((resolve, reject) => {
+    const script = document.createElement("script");
+    script.src =
+      "https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.min.js";
+    script.async = true;
+    script.onload = () => resolve(window.confetti || null);
+    script.onerror = () => reject(new Error("Failed to load confetti"));
+    document.head.appendChild(script);
+  });
+  return confettiLoadPromise;
+}
+
 export default function LocalPage() {
   // Initialize state from localStorage if it exists
   const [tasks, setTasks] = useState(() => {
@@ -44,12 +85,43 @@ export default function LocalPage() {
     localStorage.setItem("pwa-weekly-tasks", JSON.stringify(tasks));
   }, [tasks]);
 
+  // Classes (school-style subjects) that tasks can be pinned to
+  const [classes, setClasses] = useState(() => {
+    const saved = localStorage.getItem("pwa-classes");
+    if (saved) {
+      try {
+        return JSON.parse(saved);
+      } catch (e) {
+        console.error("Failed to parse classes from local storage", e);
+      }
+    }
+    return [];
+  });
+
+  useEffect(() => {
+    localStorage.setItem("pwa-classes", JSON.stringify(classes));
+  }, [classes]);
+
+  const [theme, setTheme] = useState(
+    () => localStorage.getItem("pwa-theme") || "charcoal",
+  );
+
+  useEffect(() => {
+    localStorage.setItem("pwa-theme", theme);
+  }, [theme]);
+
+  const [settingsOpen, setSettingsOpen] = useState(false);
+
+  // Warm up the confetti CDN script so the first completed task isn't delayed.
+  useEffect(() => {
+    loadConfetti().catch((err) => console.error("Confetti failed to load", err));
+  }, []);
+
   const [activeDay, setActiveDay] = useState(null);
   const [sortMode, setSortMode] = useState("dueDate");
   const [collapsedGroups, setCollapsedGroups] = useState({});
   const [collapsedCompleted, setCollapsedCompleted] = useState({});
 
-  const [confetti, setConfetti] = useState([]);
   const completionTimers = useRef({});
 
   const [modal, setModal] = useState({
@@ -69,13 +141,14 @@ export default function LocalPage() {
     field: null,
   });
 
-  function addTask(day, text, group) {
+  function addTask(day, text, group, classId) {
     if (!text.trim()) return;
 
     const newTask = {
-      id: Date.now() + Math.random(),
+      id: generateId(),
       text: text.trim(),
       group: group || "Ungrouped",
+      classId: classId || null,
       completed: false,
       dueDate: null,
       duration: null,
@@ -85,25 +158,86 @@ export default function LocalPage() {
     setTasks((prev) => ({ ...prev, [day]: [...prev[day], newTask] }));
   }
 
-  function triggerConfetti(e) {
-    const rect = e.currentTarget.getBoundingClientRect();
-    const x = rect.left + rect.width / 2;
-    const y = rect.top + rect.height / 2;
+  function addClass() {
+    const name = prompt("Class name (e.g., Algebra II):");
+    if (!name || !name.trim()) return;
 
-    const colors = ["#8ab4f8", "#4caf50", "#ffa726", "#ff5252", "#e8eaed"];
-    const newParticles = Array.from({ length: 14 }).map(() => ({
-      id: Math.random(),
-      x,
-      y,
-      vx: (Math.random() - 0.5) * 80,
-      vy: (Math.random() - 0.8) * 80,
-      color: colors[Math.floor(Math.random() * colors.length)],
-    }));
+    setClasses((prev) => [
+      ...prev,
+      {
+        id: generateId(),
+        name: name.trim(),
+        day: "gold",
+        color: "#8ab4f8",
+      },
+    ]);
+  }
 
-    setConfetti((prev) => [...prev, ...newParticles]);
-    setTimeout(() => {
-      setConfetti((prev) => prev.filter((p) => !newParticles.includes(p)));
-    }, 1000);
+  function toggleClassDay(id) {
+    setClasses((prev) =>
+      prev.map((c) =>
+        c.id === id ? { ...c, day: c.day === "gold" ? "black" : "gold" } : c,
+      ),
+    );
+  }
+
+  function setClassColor(id, color) {
+    setClasses((prev) =>
+      prev.map((c) => (c.id === id ? { ...c, color } : c)),
+    );
+  }
+
+  function moveClass(index, direction) {
+    setClasses((prev) => {
+      const next = [...prev];
+      const target = index + direction;
+      if (target < 0 || target >= next.length) return prev;
+      [next[index], next[target]] = [next[target], next[index]];
+      return next;
+    });
+  }
+
+  function deleteClass(id) {
+    setClasses((prev) => prev.filter((c) => c.id !== id));
+  }
+
+  function triggerConfetti() {
+    loadConfetti()
+      .then((confetti) => {
+        if (!confetti) return;
+        const colors = ["#8ab4f8", "#4caf50", "#ffa726", "#ff5252", "#e8eaed"];
+
+        // Center cannon straight down from the very top of the screen...
+        confetti({
+          particleCount: 70,
+          spread: 100,
+          startVelocity: 45,
+          gravity: 1.1,
+          ticks: 100,
+          origin: { x: 0, y: 0 },
+          colors,
+        });
+        // ...plus two side cannons arcing in from the top corners.
+        confetti({
+          particleCount: 40,
+          angle: 60,
+          spread: 60,
+          startVelocity: 55,
+          gravity: 1.1,
+          origin: { x: 0.05, y: 0 },
+          colors,
+        });
+        confetti({
+          particleCount: 40,
+          angle: 120,
+          spread: 60,
+          startVelocity: 100,
+          gravity: 1.1,
+          origin: { x: 0.95, y: 0 },
+          colors,
+        });
+      })
+      .catch((err) => console.error("Confetti failed to load", err));
   }
 
   function toggleTaskCompletion(e, day, taskId) {
@@ -113,12 +247,12 @@ export default function LocalPage() {
     const willBeCompleted = !task.completed;
 
     if (willBeCompleted) {
-      triggerConfetti(e);
+      triggerConfetti();
       completionTimers.current[taskId] = setTimeout(() => {
         setTasks((prev) => ({
           ...prev,
           [day]: prev[day].map((t) =>
-            t.id === taskId ? { ...t, completedAt: Date.now() } : t,
+            t.id === taskId ? { ...t, completedAt: now() } : t,
           ),
         }));
       }, 3000);
@@ -162,8 +296,12 @@ export default function LocalPage() {
   function handleInlineKeyDown(e, day, groupName) {
     if (e.key === "Enter") {
       e.preventDefault();
-      addTask(day, e.target.value, groupName);
+      const wrapper = e.target.closest(".inline-input-wrapper");
+      const select = wrapper ? wrapper.querySelector(".class-select") : null;
+      const classId = select && select.value ? select.value : null;
+      addTask(day, e.target.value, groupName, classId);
       e.target.value = "";
+      if (select) select.value = "";
     }
   }
 
@@ -173,7 +311,7 @@ export default function LocalPage() {
       type: "date",
       taskId: task.id,
       day,
-      tempDate: task.dueDate ? new Date(task.dueDate) : new Date(),
+      tempDate: task.dueDate ? new Date(task.dueDate) : nowDate(),
       tempHours: 0,
       tempMinutes: 0,
     });
@@ -255,16 +393,16 @@ export default function LocalPage() {
     window.removeEventListener("touchend", handleDragEnd);
   }
 
-  function isToday(dateString) {
-    if (!dateString) return false;
-    const today = new Date();
-    const date = new Date(dateString);
-    return (
-      date.getDate() === today.getDate() &&
-      date.getMonth() === today.getMonth() &&
-      date.getFullYear() === today.getFullYear()
-    );
-  }
+  // function isToday(dateString) {
+  //   if (!dateString) return false;
+  //   const today = nowDate();
+  //   const date = new Date(dateString);
+  //   return (
+  //     date.getDate() === today.getDate() &&
+  //     date.getMonth() === today.getMonth() &&
+  //     date.getFullYear() === today.getFullYear()
+  //   );
+  // }
 
   function formatDateTime(dateString) {
     if (!dateString) return "Set Date";
@@ -279,9 +417,38 @@ export default function LocalPage() {
     return (h + m).trim();
   }
 
+  function startOfDay(d) {
+    const x = new Date(d);
+    x.setHours(0, 0, 0, 0);
+    return x;
+  }
+
+  // Urgency + color-coding based on proximity to the due date.
+  // "Due today" and "the night before" (after 6pm, due tomorrow) both count as urgent.
+  function getDueMeta(dateString, completed) {
+    if (!dateString || completed) return { urgent: false, colorClass: "" };
+
+    const due = startOfDay(dateString);
+    const today = startOfDay(nowDate());
+    const diffDays = Math.round((due - today) / 86400000);
+    const nightBefore = diffDays === 1 && nowDate().getHours() >= 18;
+    const urgent = diffDays <= 0 || nightBefore;
+
+    let colorClass = "due-far";
+    if (diffDays < 0) colorClass = "due-overdue";
+    else if (diffDays === 0 || nightBefore) colorClass = "due-today";
+    else if (diffDays <= 2) colorClass = "due-soon";
+    else if (diffDays <= 6) colorClass = "due-week";
+
+    return { urgent, colorClass };
+  }
+
   function getSortedTasks(dayTasks) {
     return [...dayTasks].sort((a, b) => {
       if (sortMode === "dueDate") {
+        const aMeta = getDueMeta(a.dueDate, a.completed);
+        const bMeta = getDueMeta(b.dueDate, b.completed);
+        if (aMeta.urgent !== bMeta.urgent) return aMeta.urgent ? -1 : 1;
         if (!a.dueDate) return 1;
         if (!b.dueDate) return -1;
         return new Date(a.dueDate) - new Date(b.dueDate);
@@ -298,33 +465,33 @@ export default function LocalPage() {
   }
 
   return (
-    <div className="app-container">
-      {confetti.map((p) => (
-        <div
-          key={p.id}
-          className="confetti-particle"
-          style={{
-            backgroundColor: p.color,
-            left: `${p.x}px`,
-            top: `${p.y}px`,
-            transform: `translate(${p.vx}px, ${p.vy}px)`,
-          }}
-        />
-      ))}
+    <div className="app-container" data-theme={theme}>
 
-      <button
-        className="sort-toggle-btn"
-        onClick={() =>
-          setSortMode((prev) => (prev === "dueDate" ? "duration" : "dueDate"))
-        }
-        title="Toggle Sorting Mode"
-      >
-        {sortMode === "dueDate" ? (
-          <i className="fa-solid fa-calendar-days"></i>
-        ) : (
-          <i className="fa-solid fa-hourglass-half"></i>
-        )}
-      </button>
+      {activeDay === null ? (
+        <button
+          className="sort-toggle-btn"
+          onClick={() => setSettingsOpen(true)}
+          title="Settings"
+        >
+          <i className="fa-solid fa-gear"></i>
+        </button>
+      ) : (
+        <button
+          className="sort-toggle-btn"
+          onClick={() =>
+            setSortMode((prev) =>
+              prev === "dueDate" ? "duration" : "dueDate",
+            )
+          }
+          title="Toggle Sorting Mode"
+        >
+          {sortMode === "dueDate" ? (
+            <i className="fa-solid fa-calendar-days"></i>
+          ) : (
+            <i className="fa-solid fa-hourglass-half"></i>
+          )}
+        </button>
+      )}
 
       <h1 className={`main-title ${activeDay ? "hidden" : ""}`}>
         Weekly Tasks
@@ -396,50 +563,76 @@ export default function LocalPage() {
 
                       {!isCollapsed && (
                         <>
-                          {groupTasks.map((task) => (
-                            <div
-                              key={task.id}
-                              className={`task-item ${task.completed ? "completed" : ""}`}
-                            >
+                          {groupTasks.map((task) => {
+                            const dueMeta = getDueMeta(
+                              task.dueDate,
+                              task.completed,
+                            );
+                            const taskClass = task.classId
+                              ? classes.find((c) => c.id === task.classId)
+                              : null;
+
+                            return (
                               <div
-                                className="task-main"
-                                onClick={(e) =>
-                                  toggleTaskCompletion(e, day, task.id)
+                                key={task.id}
+                                className={`task-item ${task.completed ? "completed" : ""} ${!task.completed ? dueMeta.colorClass : ""}`}
+                                style={
+                                  taskClass
+                                    ? { borderLeft: `3px solid ${taskClass.color}` }
+                                    : undefined
                                 }
                               >
-                                <div className="checkbox">
-                                  {task.completed && (
-                                    <span className="checkmark">
-                                      <i className="fa-solid fa-check"></i>
+                                <div
+                                  className="task-main"
+                                  onClick={(e) =>
+                                    toggleTaskCompletion(e, day, task.id)
+                                  }
+                                >
+                                  <div className="checkbox">
+                                    {task.completed && (
+                                      <span className="checkmark">
+                                        <i className="fa-solid fa-check"></i>
+                                      </span>
+                                    )}
+                                  </div>
+                                  <p>{task.text}</p>
+                                  {taskClass && (
+                                    <span
+                                      className="task-class-badge"
+                                      style={{
+                                        borderColor: taskClass.color,
+                                        color: taskClass.color,
+                                      }}
+                                    >
+                                      {taskClass.name}
                                     </span>
                                   )}
                                 </div>
-                                <p>{task.text}</p>
-                              </div>
 
-                              <div className="task-meta">
-                                <span
-                                  className={`meta-btn ${isToday(task.dueDate) && !task.completed ? "urgent" : ""}`}
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    openDateModal(day, task);
-                                  }}
-                                >
-                                  {formatDateTime(task.dueDate)}
-                                </span>
-                                <span className="meta-dot">•</span>
-                                <span
-                                  className="meta-btn"
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    openDurationModal(day, task);
-                                  }}
-                                >
-                                  {formatDuration(task.duration)}
-                                </span>
+                                <div className="task-meta">
+                                  <span
+                                    className={`meta-btn ${dueMeta.urgent && !task.completed ? "urgent" : ""}`}
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      openDateModal(day, task);
+                                    }}
+                                  >
+                                    {formatDateTime(task.dueDate)}
+                                  </span>
+                                  <span className="meta-dot">•</span>
+                                  <span
+                                    className="meta-btn"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      openDurationModal(day, task);
+                                    }}
+                                  >
+                                    {formatDuration(task.duration)}
+                                  </span>
+                                </div>
                               </div>
-                            </div>
-                          ))}
+                            );
+                          })}
 
                           <div className="inline-input-wrapper">
                             <span className="inline-add-icon">
@@ -457,6 +650,20 @@ export default function LocalPage() {
                                 handleInlineKeyDown(e, day, groupName)
                               }
                             />
+                            {classes.length > 0 && (
+                              <select
+                                className="class-select"
+                                defaultValue=""
+                                title="Assign to class"
+                              >
+                                <option value="">No class</option>
+                                {classes.map((c) => (
+                                  <option key={c.id} value={c.id}>
+                                    {c.name}
+                                  </option>
+                                ))}
+                              </select>
+                            )}
                           </div>
                         </>
                       )}
@@ -525,11 +732,37 @@ export default function LocalPage() {
                   placeholder="New group..."
                   onKeyDown={(e) => {
                     if (e.key === "Enter" && e.target.value.trim()) {
-                      addTask(day, "New Task", e.target.value.trim());
+                      const wrapper = e.target.closest(".new-group-wrapper");
+                      const select = wrapper
+                        ? wrapper.querySelector(".class-select")
+                        : null;
+                      const classId =
+                        select && select.value ? select.value : null;
+                      addTask(
+                        day,
+                        "New Task",
+                        e.target.value.trim(),
+                        classId,
+                      );
                       e.target.value = "";
+                      if (select) select.value = "";
                     }
                   }}
                 />
+                {classes.length > 0 && (
+                  <select
+                    className="class-select"
+                    defaultValue=""
+                    title="Assign to class"
+                  >
+                    <option value="">No class</option>
+                    {classes.map((c) => (
+                      <option key={c.id} value={c.id}>
+                        {c.name}
+                      </option>
+                    ))}
+                  </select>
+                )}
               </div>
             </div>
           </div>
@@ -548,7 +781,7 @@ export default function LocalPage() {
                   <button
                     className="cal-nav-btn"
                     onClick={() => {
-                      const d = new Date(modal.tempDate || new Date());
+                      const d = new Date(modal.tempDate || nowDate());
                       d.setMonth(d.getMonth() - 1);
                       setModal({ ...modal, tempDate: d });
                     }}
@@ -556,13 +789,13 @@ export default function LocalPage() {
                     <i className="fa-solid fa-chevron-left"></i>
                   </button>
                   <span>
-                    {MONTH_NAMES[(modal.tempDate || new Date()).getMonth()]}{" "}
-                    {(modal.tempDate || new Date()).getFullYear()}
+                    {MONTH_NAMES[(modal.tempDate || nowDate()).getMonth()]}{" "}
+                    {(modal.tempDate || nowDate()).getFullYear()}
                   </span>
                   <button
                     className="cal-nav-btn"
                     onClick={() => {
-                      const d = new Date(modal.tempDate || new Date());
+                      const d = new Date(modal.tempDate || nowDate());
                       d.setMonth(d.getMonth() + 1);
                       setModal({ ...modal, tempDate: d });
                     }}
@@ -578,7 +811,7 @@ export default function LocalPage() {
                     </div>
                   ))}
                   {(() => {
-                    const current = modal.tempDate || new Date();
+                    const current = modal.tempDate || nowDate();
                     const year = current.getFullYear();
                     const month = current.getMonth();
                     const firstDayIndex = new Date(year, month, 1).getDay();
@@ -700,6 +933,109 @@ export default function LocalPage() {
             </button>
             <button className="modal-btn save" onClick={saveModal}>
               Save
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {/* SETTINGS MODAL */}
+      <div className={`fullscreen-modal ${settingsOpen ? "open" : ""}`}>
+        <div className="modal-content settings-content">
+          <h2 className="modal-title">Settings</h2>
+
+          <div className="settings-section">
+            <h3 className="settings-section-title">Theme</h3>
+            <div className="theme-options">
+              {THEMES.map((t) => (
+                <button
+                  key={t.id}
+                  className={`theme-swatch ${theme === t.id ? "active" : ""}`}
+                  onClick={() => setTheme(t.id)}
+                >
+                  <span
+                    className="theme-swatch-dot"
+                    style={{ background: t.dot }}
+                  ></span>
+                  {t.label}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div className="settings-section">
+            <div className="settings-section-header">
+              <h3 className="settings-section-title">Classes</h3>
+              <button className="mini-add-btn" onClick={addClass}>
+                <i className="fa-solid fa-plus"></i>
+              </button>
+            </div>
+
+            {classes.length === 0 && (
+              <p className="settings-empty">No classes yet.</p>
+            )}
+
+            <div className="class-list">
+              {classes.map((cls, idx) => (
+                <div key={cls.id} className="class-row">
+                  <label
+                    className="color-circle"
+                    style={{ backgroundColor: cls.color }}
+                    title="Pick a color"
+                  >
+                    <input
+                      type="color"
+                      value={cls.color}
+                      onChange={(e) => setClassColor(cls.id, e.target.value)}
+                    />
+                  </label>
+
+                  <span className="class-row-name">{cls.name}</span>
+
+                  <button
+                    className={`day-toggle-btn ${cls.day}`}
+                    onClick={() => toggleClassDay(cls.id)}
+                    title="Toggle Gold/Black day"
+                  >
+                    {cls.day === "gold" ? "Gold Day" : "Black Day"}
+                  </button>
+
+                  <div className="priority-arrows">
+                    <button
+                      className="wheel-arrow"
+                      disabled={idx === 0}
+                      onClick={() => moveClass(idx, -1)}
+                      title="Move up"
+                    >
+                      <i className="fa-solid fa-chevron-up"></i>
+                    </button>
+                    <button
+                      className="wheel-arrow"
+                      disabled={idx === classes.length - 1}
+                      onClick={() => moveClass(idx, 1)}
+                      title="Move down"
+                    >
+                      <i className="fa-solid fa-chevron-down"></i>
+                    </button>
+                  </div>
+
+                  <button
+                    className="trash-btn-box"
+                    onClick={() => deleteClass(cls.id)}
+                    title="Delete class"
+                  >
+                    <i className="fa-solid fa-trash-can"></i>
+                  </button>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div className="modal-actions">
+            <button
+              className="modal-btn save"
+              onClick={() => setSettingsOpen(false)}
+            >
+              Done
             </button>
           </div>
         </div>
