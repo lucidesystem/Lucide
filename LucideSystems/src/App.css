@@ -1303,6 +1303,100 @@ p {
   }
 }
 
+/* ---------- AUTH (LOGIN / SIGNUP) ----------
+   Reuses the .start-form field styling, .btn/.btn-primary, .eyebrow, and
+   the hero-glow ambient treatment rather than introducing a parallel set
+   of components. */
+.auth-screen {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 32px;
+  position: relative;
+}
+
+.auth-screen .hero-glow {
+  top: 50%;
+  right: auto;
+  left: 50%;
+  width: 640px;
+  height: 640px;
+  transform: translate(-50%, -50%);
+}
+
+.auth-card {
+  position: relative;
+  width: 100%;
+  max-width: 400px;
+}
+
+.auth-card .logo {
+  cursor: default;
+  margin-bottom: 28px;
+}
+
+.auth-card .logo:hover {
+  opacity: 1;
+}
+
+.auth-card h1 {
+  font-size: 1.5rem;
+  margin-bottom: 8px;
+}
+
+.auth-card .section-sub {
+  margin-bottom: 28px;
+  max-width: none;
+}
+
+.auth-card .start-form {
+  gap: 16px;
+}
+
+.auth-card .start-form label {
+  gap: 6px;
+}
+
+.auth-error {
+  font-size: 0.85rem;
+  color: #f87171;
+  background: rgba(248, 113, 113, 0.1);
+  border: 1px solid rgba(248, 113, 113, 0.28);
+  border-radius: var(--r-sm);
+  padding: 10px 14px;
+  margin: 0;
+}
+
+.auth-switch {
+  margin-top: 22px;
+  text-align: center;
+  font-size: 0.88rem;
+  color: var(--text-muted);
+}
+
+.auth-switch button {
+  background: none;
+  border: none;
+  color: var(--accent-2);
+  font-size: 0.88rem;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 0;
+  font-family: var(--sans);
+  transition: color var(--dur-fast) var(--ease-soft);
+}
+
+.auth-switch button:hover {
+  color: var(--text);
+}
+
+@media (max-width: 640px) {
+  .auth-screen {
+    padding: 20px;
+  }
+}
+
 /* ---------- RESPONSIVE ---------- */
 @media (max-width: 860px) {
   .services-grid {
