@@ -692,10 +692,10 @@ export default function App() {
       {/* HERO */}
       <section className="hero">
         <div className="hero-glow" aria-hidden="true" />
+        <div className="hero-logo-mark" aria-hidden="true">
+          <img src="/assets/lucidelogohd.png" alt="" />
+        </div>
         <div className="hero-type">
-          <div className="hero-logo-mark" aria-hidden="true">
-            <img src="/assets/lucidelogohd.png" alt="" />
-          </div>
           <h1 className="sr-only">
             LucideSystems. Systems that scale with you, built to convert,
             trusted by customers, and delivered fast — all in one system.
