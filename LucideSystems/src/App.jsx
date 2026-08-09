@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import "./App.css";
 import Login from "./pages/Login";
+import Greeting from "./pages/Greeting";
 
 const SERVICES = [
   {
