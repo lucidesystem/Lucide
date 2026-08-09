@@ -1182,84 +1182,24 @@ p {
   border-top: 1px solid var(--border-soft);
 }
 
-.status-pill {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  padding: 6px 14px;
-  border-radius: 999px;
-  border: 1px solid rgba(255,255,255,0.12);
-  font-size: 0.85rem;
-  margin-bottom: 1.5rem;
-}
+/* Live status dot, sized to sit inline with a .stat-num value */
 .status-dot {
-  width: 8px;
-  height: 8px;
+  display: inline-block;
+  width: 7px;
+  height: 7px;
   border-radius: 50%;
   background: #6b7280;
+  flex-shrink: 0;
 }
-.status-online .status-dot { background: #22c55e; }
-.status-degraded .status-dot { background: #eab308; }
-.status-offline .status-dot { background: #ef4444; }
+.status-dot-online { background: #22c55e; }
+.status-dot-degraded { background: #eab308; }
+.status-dot-offline { background: #ef4444; }
+.status-dot-connecting { background: #6b7280; }
 
-/* ---------- SERVER STATUS (compact) ---------- */
-.server-status {
-  max-width: var(--max);
-  margin: 0 auto;
-  padding: 36px 32px 56px;
-}
-
-.server-status .eyebrow {
-  margin-bottom: 12px;
-}
-
-.server-status h2 {
-  font-size: clamp(1.3rem, 2vw, 1.6rem);
-  margin-bottom: 18px;
-}
-
-.server-status .services-grid {
-  grid-template-columns: repeat(5, 1fr);
-  gap: 12px;
-}
-
-.server-status .service-card {
-  padding: 16px 16px;
-  border-radius: var(--r-md);
-}
-
-.server-status .service-card h3 {
-  font-size: 0.72rem;
-  color: var(--text-dim);
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  font-weight: 700;
-  margin-bottom: 6px;
-}
-
-.server-status .service-card .stat-num {
-  font-size: 1.25rem;
-}
-
-.server-status .service-card p:not(.stat-num) {
-  font-size: 0.72rem;
-  color: var(--text-dim);
-  margin-top: 2px;
-}
-
-@media (max-width: 860px) {
-  .server-status .services-grid {
-    grid-template-columns: repeat(3, 1fr);
-  }
-}
-
-@media (max-width: 640px) {
-  .server-status {
-    padding: 28px 20px 44px;
-  }
-  .server-status .services-grid {
-    grid-template-columns: repeat(2, 1fr);
-  }
+.stat-num.status-num {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
 }
 
 @media (max-width: 860px) {
