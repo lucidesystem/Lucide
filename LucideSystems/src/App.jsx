@@ -69,8 +69,8 @@ const SERVICES = [
   },
 ];
 
-const STATS_URL = "https://rooter-thinkcentre-e73.tailb0c61f.ts.net/stats";
-const POLL_MS = 1500;
+const STATS_URL = "https://rooter-thinkcentere-e73.tailb0c61f.ts.net/stats";
+const POLL_MS = 8000;
 
 function formatUptime(seconds) {
   if (!seconds && seconds !== 0) return "—";
@@ -714,6 +714,9 @@ export default function App() {
               </div>
             </section>
 
+            {/* LIVE SERVER STATUS */}
+            <ServerStats />
+
             {/* START A PROJECT / LEAD FORM */}
             <section id="start" className="start reveal">
               <div className="start-copy">
@@ -844,9 +847,6 @@ export default function App() {
                 ))}
               </div>
             </section>
-
-            {/* LIVE SERVER STATUS */}
-            <ServerStats />
 
             {/* WORK */}
             <section id="work" className="work reveal">
