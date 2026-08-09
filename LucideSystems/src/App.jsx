@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import "./App.css";
+import Login from "./pages/Login";
 
 const SERVICES = [
   {
@@ -530,7 +531,7 @@ function useScrollReveal(watchedValue) {
 const FORM_ENDPOINT = "https://formspree.io/f/xdenaajk";
 
 export default function App() {
-  const [page, setPage] = useState("home"); // "home" | "about"
+  const [page, setPage] = useState("home"); // "home" | "about" | "login"
   const pendingScroll = useRef(null);
   const [menuOpen, setMenuOpen] = useState(false);
   const [form, setForm] = useState({
@@ -552,7 +553,7 @@ export default function App() {
       requestAnimationFrame(() => {
         document.getElementById(id)?.scrollIntoView({ behavior: "smooth" });
       });
-    } else if (page === "about") {
+    } else if (page === "about" || page === "login") {
       window.scrollTo({
         top: 0,
         behavior: "instant" in window ? "instant" : "auto",
@@ -617,6 +618,11 @@ export default function App() {
     setPage("about");
   };
 
+  const goToLogin = () => {
+    setMenuOpen(false);
+    setPage("login");
+  };
+
   return (
     <div className="app">
       {/* NAV */}
@@ -641,6 +647,7 @@ export default function App() {
               <button onClick={() => goTo("work")}>Work</button>
               <button onClick={() => goTo("process")}>Process</button>
               <button onClick={goToAbout}>About</button>
+              <button onClick={goToLogin}>Log In</button>
               <button className="nav-cta" onClick={() => goTo("start")}>
                 Start a Project
               </button>
@@ -663,6 +670,15 @@ export default function App() {
         {page === "about" ? (
           <div className="page-enter" key="about">
             <AboutPage onStart={() => goTo("start")} />
+          </div>
+        ) : page === "login" ? (
+          <div className="page-enter" key="login">
+            <div className="auth-screen">
+              <div className="hero-glow" aria-hidden="true" />
+              <div className="auth-card">
+                <Login onSuccess={() => setPage("home")} />
+              </div>
+            </div>
           </div>
         ) : (
           <div className="page-enter" key="home">
