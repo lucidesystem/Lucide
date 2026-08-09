@@ -666,57 +666,59 @@ export default function App() {
           </button>
         </div>
       </header>
-
-      <main id="top">
-        {page === "about" ? (
-          <div className="page-enter" key="about">
-            <AboutPage onStart={() => goTo("start")} />
+      
+<main id="top">
+  {page === "about" ? (
+    <div className="page-enter" key="about">
+      <AboutPage onStart={() => goTo("start")} />
+    </div>
+  ) : page === "dashboard" ? (
+    <div className="page-enter" key="dashboard">
+      <Greeting onLogout={() => setPage("login")} />
+    </div>
+  ) : page === "login" ? (
+    <div className="page-enter" key="login">
+      <div className="auth-screen">
+        <div className="hero-glow" aria-hidden="true" />
+        <div className="auth-card">
+          <Login onSuccess={() => setPage("dashboard")} />
+        </div>
+      </div>
+    </div>
+  ) : (
+    <div className="page-enter" key="home">
+      {/* HERO */}
+      <section className="hero">
+        <div className="hero-glow" aria-hidden="true" />
+        <div className="hero-type">
+          <h1 className="sr-only">
+            LucideSystems. Systems that scale with you, built to convert,
+            trusted by customers, and delivered fast — all in one system.
+          </h1>
+          <div className="type-line" aria-hidden="true">
+            <AnimatedHeadline {...headline} />
           </div>
-        ) : page === "login" ? (
-          <div className="page-enter" key="login">
-            <div className="auth-screen">
-              <div className="hero-glow" aria-hidden="true" />
-              <div className="auth-card">
-                <Login onSuccess={() => setPage("dashboard")} />
-              </div>
-            </div>
-          </div>
-        ) : (
-          <div className="page-enter" key="home">
-            {/* HERO */}
-            <section className="hero">
-              <div className="hero-glow" aria-hidden="true" />
-
-              <div className="hero-type">
-                <h1 className="sr-only">
-                  LucideSystems. Systems that scale with you, built to convert,
-                  trusted by customers, and delivered fast — all in one system.
-                </h1>
-                <div className="type-line" aria-hidden="true">
-                  <AnimatedHeadline {...headline} />
-                </div>
-              </div>
-
-              <p className="hero-sub">
-                LucideSystems designs and builds websites, storefronts, and web
-                applications for teams who need it done right the first time.
-              </p>
-              <div className="hero-actions">
-                <button
-                  className="btn btn-primary"
-                  onClick={() => scrollTo("start")}
-                >
-                  Get Your Website
-                </button>
-                <button
-                  className="btn btn-ghost"
-                  onClick={() => scrollTo("work")}
-                >
-                  See Our Work
-                </button>
-              </div>
-              <StatsTicker />
-            </section>
+        </div>
+        <p className="hero-sub">
+          LucideSystems designs and builds websites, storefronts, and web
+          applications for teams who need it done right the first time.
+        </p>
+        <div className="hero-actions">
+          <button
+            className="btn btn-primary"
+            onClick={() => scrollTo("start")}
+          >
+            Get Your Website
+          </button>
+          <button
+            className="btn btn-ghost"
+            onClick={() => scrollTo("work")}
+          >
+            See Our Work
+          </button>
+        </div>
+        <StatsTicker />
+      </section>
 
             {/* START A PROJECT / LEAD FORM */}
             <section id="start" className="start reveal">
