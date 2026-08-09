@@ -2,7 +2,6 @@ import { useState, useEffect, useRef } from "react";
 import "./App.css";
 import Login from "./pages/Login";
 import Greeting from "./pages/Greeting";
-import lucideLogo from '../assets/lucidelogo.png';
 
 const SERVICES = [
   {
