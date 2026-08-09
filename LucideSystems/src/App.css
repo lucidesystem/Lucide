@@ -477,8 +477,8 @@ p {
   top: 50%;
   right: -6%;
   transform: translateY(-50%);
-  width: min(58vw, 640px);
-  height: min(58vw, 640px);
+  width: min(40vw, 420px);
+  height: min(40vw, 420px);
   z-index: 0;
   pointer-events: none;
   opacity: 0.9;
