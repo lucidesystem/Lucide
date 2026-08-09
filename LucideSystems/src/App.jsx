@@ -69,6 +69,129 @@ const SERVICES = [
   },
 ];
 
+const STATS_URL = "https://rooter-thinkcentre-e73.tailb0c61f.ts.net/stats";
+const POLL_MS = 1500;
+
+function formatUptime(seconds) {
+  if (!seconds && seconds !== 0) return "—";
+  const days = Math.floor(seconds / 86400);
+  const hours = Math.floor((seconds % 86400) / 3600);
+  if (days > 0) return `${days}d ${hours}h`;
+  const minutes = Math.floor((seconds % 3600) / 60);
+  return `${hours}h ${minutes}m`;
+}
+
+// Polls STATS_URL on an interval, timing each request itself so "latency"
+// reflects what an actual visitor experiences, not a server-side ping.
+function useServerStats() {
+  const [state, setState] = useState({
+    status: "connecting", // connecting | online | degraded | offline
+    stats: null,
+    latencyMs: null,
+  });
+  const timeoutRef = useRef(null);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    async function poll() {
+      const start = performance.now();
+      try {
+        const res = await fetch(STATS_URL, { cache: "no-store" });
+        const latencyMs = Math.round(performance.now() - start);
+        if (!res.ok) throw new Error("bad response");
+        const stats = await res.json();
+        if (cancelled) return;
+        setState({
+          status: stats.status === "online" ? "online" : "degraded",
+          stats,
+          latencyMs,
+        });
+      } catch {
+        if (cancelled) return;
+        setState((prev) => ({ ...prev, status: "offline" }));
+      } finally {
+        if (!cancelled) {
+          timeoutRef.current = setTimeout(poll, POLL_MS);
+        }
+      }
+    }
+
+    poll();
+    return () => {
+      cancelled = true;
+      clearTimeout(timeoutRef.current);
+    };
+  }, []);
+
+  return state;
+}
+
+function ServerStats() {
+  const { status, stats, latencyMs } = useServerStats();
+
+  const statusLabel =
+    status === "online"
+      ? "Online"
+      : status === "degraded"
+        ? "Degraded"
+        : status === "offline"
+          ? "Offline"
+          : "Connecting…";
+
+  return (
+    <section id="server-status" className="services reveal">
+      <p className="eyebrow">Live status</p>
+      <h2>Our server, in real time.</h2>
+
+      <div className={`status-pill status-${status}`}>
+        <span className="status-dot" aria-hidden="true" />
+        {statusLabel}
+      </div>
+
+      <div className="services-grid reveal-stagger">
+        <div className="service-card">
+          <h3>Uptime</h3>
+          <p className="stat-num">{formatUptime(stats?.uptimeSeconds)}</p>
+        </div>
+        <div className="service-card">
+          <h3>CPU load</h3>
+          <p className="stat-num">
+            {stats?.cpu?.loadPercent != null ? `${stats.cpu.loadPercent}%` : "—"}
+          </p>
+        </div>
+        <div className="service-card">
+          <h3>Memory</h3>
+          <p className="stat-num">
+            {stats?.memory?.usedPercent != null
+              ? `${stats.memory.usedPercent}%`
+              : "—"}
+          </p>
+          <p>
+            {stats?.memory
+              ? `${stats.memory.usedGB} / ${stats.memory.totalGB} GB`
+              : ""}
+          </p>
+        </div>
+        <div className="service-card">
+          <h3>Disk</h3>
+          <p className="stat-num">
+            {stats?.disk?.usedPercent != null ? `${stats.disk.usedPercent}%` : "—"}
+          </p>
+          <p>
+            {stats?.disk ? `${stats.disk.usedGB} / ${stats.disk.totalGB} GB` : ""}
+          </p>
+        </div>
+        <div className="service-card">
+          <h3>Latency</h3>
+          <p className="stat-num">{latencyMs != null ? `${latencyMs} ms` : "—"}</p>
+          <p>to you, right now</p>
+        </div>
+      </div>
+    </section>
+  );
+}
+
 const WORK = [
   { name: "Northwind Freight", tag: "Logistics · Web App", swatch: "swatch-a" },
   {
@@ -721,6 +844,9 @@ export default function App() {
                 ))}
               </div>
             </section>
+
+            {/* LIVE SERVER STATUS */}
+            <ServerStats />
 
             {/* WORK */}
             <section id="work" className="work reveal">
