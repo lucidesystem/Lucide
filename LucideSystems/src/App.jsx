@@ -127,68 +127,44 @@ function useServerStats() {
   return state;
 }
 
+// Renders as extra .stat items so it drops directly into the existing
+// hero-meta row — same size and type treatment as Uptime / Sites shipped /
+// Avg. load time, just a live-updating set instead of static numbers.
 function ServerStats() {
   const { status, stats, latencyMs } = useServerStats();
 
-  const statusLabel =
-    status === "online"
-      ? "Online"
-      : status === "degraded"
-        ? "Degraded"
-        : status === "offline"
-          ? "Offline"
-          : "Connecting…";
-
   return (
-    <section id="server-status" className="server-status reveal">
-      <p className="eyebrow">Live status</p>
-      <h2>Our server, in real time.</h2>
-
-      <div className={`status-pill status-${status}`}>
-        <span className="status-dot" aria-hidden="true" />
-        {statusLabel}
+    <>
+      <div className="stat">
+        <span className="stat-num status-num">
+          <span className={`status-dot status-dot-${status}`} aria-hidden="true" />
+          {formatUptime(stats?.uptimeSeconds)}
+        </span>
+        <span className="stat-label">Live uptime</span>
       </div>
-
-      <div className="services-grid reveal-stagger">
-        <div className="service-card">
-          <h3>Uptime</h3>
-          <p className="stat-num">{formatUptime(stats?.uptimeSeconds)}</p>
-        </div>
-        <div className="service-card">
-          <h3>CPU load</h3>
-          <p className="stat-num">
-            {stats?.cpu?.loadPercent != null ? `${stats.cpu.loadPercent}%` : "—"}
-          </p>
-        </div>
-        <div className="service-card">
-          <h3>Memory</h3>
-          <p className="stat-num">
-            {stats?.memory?.usedPercent != null
-              ? `${stats.memory.usedPercent}%`
-              : "—"}
-          </p>
-          <p>
-            {stats?.memory
-              ? `${stats.memory.usedGB} / ${stats.memory.totalGB} GB`
-              : ""}
-          </p>
-        </div>
-        <div className="service-card">
-          <h3>Disk</h3>
-          <p className="stat-num">
-            {stats?.disk?.usedPercent != null ? `${stats.disk.usedPercent}%` : "—"}
-          </p>
-          <p>
-            {stats?.disk ? `${stats.disk.usedGB} / ${stats.disk.totalGB} GB` : ""}
-          </p>
-        </div>
-        <div className="service-card">
-          <h3>Latency</h3>
-          <p className="stat-num">{latencyMs != null ? `${latencyMs} ms` : "—"}</p>
-          <p>to you, right now</p>
-        </div>
+      <div className="stat">
+        <span className="stat-num">
+          {stats?.cpu?.loadPercent != null ? `${stats.cpu.loadPercent}%` : "—"}
+        </span>
+        <span className="stat-label">CPU load</span>
       </div>
-    </section>
+      <div className="stat">
+        <span className="stat-num">
+          {stats?.memory?.usedPercent != null ? `${stats.memory.usedPercent}%` : "—"}
+        </span>
+        <span className="stat-label">Memory</span>
+      </div>
+      <div className="stat">
+        <span className="stat-num">
+          {stats?.disk?.usedPercent != null ? `${stats.disk.usedPercent}%` : "—"}
+        </span>
+        <span className="stat-label">Disk</span>
+      </div>
+      <div className="stat">
+        <span className="stat-num">{latencyMs != null ? `${latencyMs} ms` : "—"}</span>
+        <span className="stat-label">Latency to you</span>
+      </div>
+    </>
   );
 }
 
@@ -711,11 +687,9 @@ export default function App() {
                   <span className="stat-num">0.8s</span>
                   <span className="stat-label">Avg. load time</span>
                 </div>
+                <ServerStats />
               </div>
             </section>
-
-            {/* LIVE SERVER STATUS */}
-            <ServerStats />
 
             {/* START A PROJECT / LEAD FORM */}
             <section id="start" className="start reveal">
