@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import "./App.css";
 import Login from "./pages/Login";
 import Greeting from "./pages/Greeting";
+import lucideLogo from '../assets/lucidelogo.png';
 
 const SERVICES = [
   {
@@ -637,7 +638,7 @@ export default function App() {
             }}
           >
             <span className="logo-badge">
-            <img src="assets/lucidelogo.png" alt="L" className="logo-badge-img" />
+              <img src={lucideLogo} alt="Logo" className="logo-badge-img" />
             </span>
             <span className="logo-text">
               Lucide<span className="logo-accent">Systems</span>
@@ -918,7 +919,7 @@ export default function App() {
         <div className="footer-top">
           <div className="footer-brand">
             <span className="logo-badge">
-            <img src="assets/lucidelogo.png" alt="L" className="logo-badge-img" />
+              <img src={lucideLogo} alt="Logo" className="logo-badge-img" />
             </span>
             <span className="logo-text">
               Lucide<span className="logo-accent">Systems</span>
