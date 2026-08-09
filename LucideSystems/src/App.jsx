@@ -861,13 +861,13 @@ export default function App() {
               <p className="eyebrow">Selected work</p>
               <h2>Things we've shipped.</h2>
               <div className="work-grid reveal-stagger">
-                {WORK.map((w) => (
-                  
-                    className="work-card"
-                    href="#"
-                    key={w.name}
-                    onClick={(e) => e.preventDefault()}
-                  >
+                    {WORK.map((w) => (
+                      
+                        className="work-card"
+                        href="#"
+                        key={w.name}
+                        onClick={(e) => e.preventDefault()}
+                      >
                     <div className={`work-thumb ${w.swatch}`}>
                       <span className="work-arrow" aria-hidden="true">
                         ↗
