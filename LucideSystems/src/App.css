@@ -1182,6 +1182,27 @@ p {
   border-top: 1px solid var(--border-soft);
 }
 
+.status-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 14px;
+  border-radius: 999px;
+  border: 1px solid rgba(255,255,255,0.12);
+  font-size: 0.85rem;
+  margin-bottom: 1.5rem;
+}
+.status-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #6b7280;
+}
+.status-online .status-dot { background: #22c55e; }
+.status-degraded .status-dot { background: #eab308; }
+.status-offline .status-dot { background: #ef4444; }
+
+
 @media (max-width: 860px) {
   .about-story {
     grid-template-columns: 1fr;
