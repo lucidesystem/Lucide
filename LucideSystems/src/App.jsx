@@ -677,7 +677,7 @@ export default function App() {
             <div className="auth-screen">
               <div className="hero-glow" aria-hidden="true" />
               <div className="auth-card">
-                <Login onSuccess={() => setPage("home")} />
+                <Login onSuccess={() => setPage("dashboard")} />
               </div>
             </div>
           </div>
