@@ -265,7 +265,7 @@ p {
   position: relative;
   width: 30px;
   height: 30px;
-  border-radius: 9px;
+  border-radius: 0px;
   flex-shrink: 0;
   overflow: hidden;
 }
