@@ -127,44 +127,68 @@ function useServerStats() {
   return state;
 }
 
-// Renders as extra .stat items so it drops directly into the existing
-// hero-meta row — same size and type treatment as Uptime / Sites shipped /
-// Avg. load time, just a live-updating set instead of static numbers.
-function ServerStats() {
+const STATIC_STATS = [
+  { label: "Uptime", value: "99.98%" },
+  { label: "Sites shipped", value: "120+" },
+  { label: "Avg. load time", value: "0.8s" },
+];
+
+// A single continuously-scrolling ticker combining the static brand stats
+// with the live server stats. The track is rendered twice back to back and
+// slid left by exactly 50% on an infinite loop, so the seam is invisible.
+function StatsTicker() {
   const { status, stats, latencyMs } = useServerStats();
 
+  const liveStats = [
+    {
+      label: "Live uptime",
+      value: formatUptime(stats?.uptimeSeconds),
+      dot: status,
+    },
+    {
+      label: "CPU load",
+      value: stats?.cpu?.loadPercent != null ? `${stats.cpu.loadPercent}%` : "—",
+    },
+    {
+      label: "Memory",
+      value:
+        stats?.memory?.usedPercent != null ? `${stats.memory.usedPercent}%` : "—",
+    },
+    {
+      label: "Disk",
+      value: stats?.disk?.usedPercent != null ? `${stats.disk.usedPercent}%` : "—",
+    },
+    {
+      label: "Latency to you",
+      value: latencyMs != null ? `${latencyMs} ms` : "—",
+    },
+  ];
+
+  const allStats = [...STATIC_STATS, ...liveStats];
+
   return (
-    <>
-      <div className="stat">
-        <span className="stat-num status-num">
-          <span className={`status-dot status-dot-${status}`} aria-hidden="true" />
-          {formatUptime(stats?.uptimeSeconds)}
-        </span>
-        <span className="stat-label">Live uptime</span>
+    <div className="stat-ticker reveal">
+      <div className="stat-ticker-track">
+        {[0, 1].map((copy) => (
+          <div className="stat-ticker-set" key={copy} aria-hidden={copy === 1}>
+            {allStats.map((s, i) => (
+              <div className="stat" key={`${copy}-${i}`}>
+                <span className="stat-num">
+                  {s.dot && (
+                    <span
+                      className={`status-dot status-dot-${s.dot}`}
+                      aria-hidden="true"
+                    />
+                  )}
+                  {s.value}
+                </span>
+                <span className="stat-label">{s.label}</span>
+              </div>
+            ))}
+          </div>
+        ))}
       </div>
-      <div className="stat">
-        <span className="stat-num">
-          {stats?.cpu?.loadPercent != null ? `${stats.cpu.loadPercent}%` : "—"}
-        </span>
-        <span className="stat-label">CPU load</span>
-      </div>
-      <div className="stat">
-        <span className="stat-num">
-          {stats?.memory?.usedPercent != null ? `${stats.memory.usedPercent}%` : "—"}
-        </span>
-        <span className="stat-label">Memory</span>
-      </div>
-      <div className="stat">
-        <span className="stat-num">
-          {stats?.disk?.usedPercent != null ? `${stats.disk.usedPercent}%` : "—"}
-        </span>
-        <span className="stat-label">Disk</span>
-      </div>
-      <div className="stat">
-        <span className="stat-num">{latencyMs != null ? `${latencyMs} ms` : "—"}</span>
-        <span className="stat-label">Latency to you</span>
-      </div>
-    </>
+    </div>
   );
 }
 
@@ -674,21 +698,7 @@ export default function App() {
                   See Our Work
                 </button>
               </div>
-              <div className="hero-meta reveal">
-                <div className="stat">
-                  <span className="stat-num">99.98%</span>
-                  <span className="stat-label">Uptime</span>
-                </div>
-                <div className="stat">
-                  <span className="stat-num">120+</span>
-                  <span className="stat-label">Sites shipped</span>
-                </div>
-                <div className="stat">
-                  <span className="stat-num">0.8s</span>
-                  <span className="stat-label">Avg. load time</span>
-                </div>
-                <ServerStats />
-              </div>
+              <StatsTicker />
             </section>
 
             {/* START A PROJECT / LEAD FORM */}
