@@ -142,8 +142,8 @@ const FOUNDERS = [
   {
     name: "Sam Menninga",
     role: "Co-Founder",
-    bio: "Backend and infra background, ex-agency engineering lead. Oversees architecture on every project and still writes code most weeks.",
-    initials: "TL",
+    bio: "Server Manager and backend specialist. I am good at networking, managing databases, organizing file systems, and full-stack development.",
+    initials: "SM",
   },
 ];
 
