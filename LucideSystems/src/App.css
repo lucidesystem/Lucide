@@ -534,6 +534,8 @@ p {
 }
 
 .type-line {
+  position: relative;
+  z-index: 1;
   font-size: clamp(2.3rem, 5.6vw, 4.4rem);
   line-height: 1.08;
   margin: 0;
