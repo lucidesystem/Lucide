@@ -636,9 +636,7 @@ export default function App() {
               setPage("home");
             }}
           >
-            <span className="logo-badge">
-              <img src={lucideLogo} alt="Logo" className="logo-badge-img" />
-            </span>
+            <img src="/assets/lucidelogo.png" alt="Logo" className="logo-badge-img" />
             <span className="logo-text">
               Lucide<span className="logo-accent">Systems</span>
             </span>
@@ -917,9 +915,7 @@ export default function App() {
       <footer className="footer">
         <div className="footer-top">
           <div className="footer-brand">
-            <span className="logo-badge">
-              <img src={lucideLogo} alt="Logo" className="logo-badge-img" />
-            </span>
+            <img src="/assets/lucidelogo.png" alt="Logo" className="logo-badge-img" />
             <span className="logo-text">
               Lucide<span className="logo-accent">Systems</span>
             </span>
