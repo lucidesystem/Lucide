@@ -49,7 +49,9 @@ export default function Login({ onSuccess }) {
   return (
     <>
       <span className="logo">
-        <span className="logo-badge">L</span>
+        <span className="logo-badge">
+          <img src="/assets/lucidelogo.png" alt="Logo" />
+        </span>
         <span className="logo-text">
           Lucide<span className="logo-accent">Systems</span>
         </span>
