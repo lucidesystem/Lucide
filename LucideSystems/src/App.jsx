@@ -71,7 +71,7 @@ const SERVICES = [
   },
 ];
 
-const STATS_URL = "https://rooter-thinkcentre-e73.tailb0c61f.ts.net/stats";
+const STATS_URL = "https://stats.lucidesystems.com/stats";
 const POLL_MS = 1500;
 
 function formatUptime(seconds) {
