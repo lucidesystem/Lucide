@@ -69,7 +69,7 @@ const SERVICES = [
   },
 ];
 
-const STATS_URL = "https://rooter-thinkcentre-e73.tailb0c61f.ts.net/stats";
+const STATS_URL = "https://rooter-thinkcentere-e73.tailb0c61f.ts.net/stats";
 const POLL_MS = 8000;
 
 function formatUptime(seconds) {
@@ -140,7 +140,7 @@ function ServerStats() {
           : "Connecting…";
 
   return (
-    <section id="server-status" className="services reveal">
+    <section id="server-status" className="server-status reveal">
       <p className="eyebrow">Live status</p>
       <h2>Our server, in real time.</h2>
 
