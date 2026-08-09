@@ -69,7 +69,7 @@ const SERVICES = [
   },
 ];
 
-const STATS_URL = "https://rooter-thinkcentere-e73.tailb0c61f.ts.net/stats";
+const STATS_URL = "https://rooter-thinkcentre-e73.tailb0c61f.ts.net/stats";
 const POLL_MS = 8000;
 
 function formatUptime(seconds) {
