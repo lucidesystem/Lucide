@@ -475,15 +475,13 @@ p {
 .hero-logo-mark {
   position: absolute;
   top: 50%;
-  right: -20px;
+  right: -6%;
   transform: translateY(-50%);
-  width: clamp(140px, 15vw, 220px);
-  height: clamp(140px, 15vw, 220px);
+  width: min(58vw, 640px);
+  height: min(58vw, 640px);
   z-index: 0;
   pointer-events: none;
-  mix-blend-mode: screen;
-  opacity: 0.55;
-  filter: saturate(1.3);
+  opacity: 0.9;
 }
 
 .hero-logo-mark img {
@@ -500,6 +498,7 @@ p {
 
 .hero-type {
   position: relative;
+  z-index: 1;
   margin-bottom: 26px;
 }
 
