@@ -472,6 +472,32 @@ p {
   }
 }
 
+.hero-logo-mark {
+  position: absolute;
+  top: 50%;
+  right: 8%;
+  width: 220px;
+  height: 220px;
+  transform: translateY(-50%);
+  z-index: -1;
+  pointer-events: none;
+  mix-blend-mode: screen;
+  opacity: 0.55;
+  filter: blur(0.4px) saturate(1.3);
+}
+
+.hero-logo-mark img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+@media (max-width: 860px) {
+  .hero-logo-mark {
+    display: none;
+  }
+}
+
 .hero-type {
   margin-bottom: 26px;
 }
