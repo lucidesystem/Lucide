@@ -71,7 +71,7 @@ const SERVICES = [
   },
 ];
 
-const STATS_URL = "https://taco-childhood-jailbreak.ngrok-free.dev/stats/";
+const STATS_URL = "https://stats.lucidesystems.com/stats";
 const POLL_MS = 1500;
 
 function formatUptime(seconds) {
